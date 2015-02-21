@@ -21,13 +21,6 @@ fontSize = 12
 comicHeight = 200
 
 def makeComicStrip(comics):
-    '''
-    Returns the image of comic strip
-    Args:
-        comics : Array of individaul comic picture
-    Returns:
-        output.jpg is written as Comic Strip
-    '''
     width = 0
     for comic in comics:
       width += comic.size[0]
@@ -100,7 +93,7 @@ if __name__ == "__main__":
   for i in range(0, 10):
     boxes.append(drawBox("Hey. How are you doing?", "happy"))
   comic = makeComicStrip(boxes)
-  comic.save("comic.jpg")
+  comic.save("results/comic.jpg")
   '''tw = twitter.Twitter()
   tw.auth("", "")
   tweets = tw.getTweets(["565616594035159041", "565616718786330625"])
