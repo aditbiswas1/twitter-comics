@@ -18,6 +18,26 @@ bubbleJSON = "bubble.json"
 
 fontSize = 12
 
+def makeComicStrip(comics):
+    '''
+    Returns the image of comic strip
+    Args:
+        comics : Array of individaul comic picture
+    Returns:
+        output.jpg is written as Comic Strip
+    '''
+    width = 0
+    for comic in comics:
+      width += comic.size[0]
+    height = comics[0].size[1]
+    newIm = Image.new('RGB',(width,height))
+    steps = 500/len(comics)
+    x_cord = 0
+    for im in comics:
+        newIm.paste(im,(x_cord,0))
+        x_cord += im.size[0]
+    return newIm
+
 def fileNameFromURL(url):
   path = urlparse.urlparse(url).path
   return basename(path)
@@ -71,12 +91,16 @@ def drawBox(text, mood):
   draw = ImageDraw.Draw(bg)
   draw.line([(0, 1), (0, bgHeight - 1), (bgWidth - 1, bgHeight - 1), (bgWidth - 1, 1), (0, 1)], width=3, fill="black")
   drawText(bg, text, bx, by, bw, bh)
-  bg.save("box.jpeg")
+  return bg
 
 if __name__ == "__main__":
-  drawBox("Hey. How are you doing?", "happy")
-  tw = twitter.Twitter()
+  boxes = []
+  for i in range(0, 10):
+    boxes.append(drawBox("Hey. How are you doing?", "happy"))
+  comic = makeComicStrip(boxes)
+  comic.save("comic.jpg")
+  '''tw = twitter.Twitter()
   tw.auth("", "")
   tweets = tw.getTweets(["565616594035159041", "565616718786330625"])
   for tweet in tweets:
-    downloadImage(tweet["profilePictureURL"])
+    downloadImage(tweet["profilePictureURL"])'''
