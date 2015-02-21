@@ -33,7 +33,6 @@ def makeComicStrip(comics):
       width += comic.size[0]
     height = comics[0].size[1]
     newIm = Image.new('RGB',(width,height))
-    steps = 500/len(comics)
     x_cord = 0
     for im in comics:
         newIm.paste(im,(x_cord,0))
@@ -64,7 +63,7 @@ def splitIntoLines(text, maxLength):
   return lines
 
 def drawText(bg, text, bx, by, bw, bh):
-  bx = bx * 1.2
+  bx = bx + bw * 0.2
   bh = bh * 0.9
   font = ImageFont.truetype("font.ttf", fontSize)
   draw = ImageDraw.Draw(bg)
