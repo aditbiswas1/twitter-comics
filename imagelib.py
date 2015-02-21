@@ -18,6 +18,8 @@ bubbleJSON = "bubble.json"
 
 fontSize = 12
 
+comicHeight = 200
+
 def makeComicStrip(comics):
     '''
     Returns the image of comic strip
@@ -91,6 +93,7 @@ def drawBox(text, mood):
   draw = ImageDraw.Draw(bg)
   draw.line([(0, 1), (0, bgHeight - 1), (bgWidth - 1, bgHeight - 1), (bgWidth - 1, 1), (0, 1)], width=3, fill="black")
   drawText(bg, text, bx, by, bw, bh)
+  bg = bg.resize((bg.size[0] * comicHeight / bg.size[1], comicHeight))
   return bg
 
 if __name__ == "__main__":
