@@ -5,6 +5,8 @@ A basic bottle app skeleton
 
 import bottle
 
+import imagelib
+
 app = application = bottle.Bottle()
 
 @app.route('/static/<filename:path>')
@@ -19,7 +21,7 @@ def show_index():
     '''
     The front "index" page
     '''
-    return 'Hello'
+    return 'Helloes'
 
 @app.route('/page/<page_name>')
 def show_page(page_name):
@@ -27,6 +29,13 @@ def show_page(page_name):
     Return a page that has been rendered using a template
     '''
     return theme('page', name=page_name)
+
+@app.route('/twitter', method='POST')
+def createComic():
+    arr = bottle.request.json['ids']
+    imagelib.makeComic(arr)
+    return bottle.static_file('comic.jpg', root='/home/azureuser/twitter-comics/results/', mimetype='image/jpeg')
+    #return "Bye"
 
 class StripPathMiddleware(object):
     '''

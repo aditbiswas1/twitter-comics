@@ -88,6 +88,13 @@ def drawBox(text, mood):
   bg = bg.resize((bg.size[0] * comicHeight / bg.size[1], comicHeight))
   return bg
 
+def makeComic(ids):
+  boxes = []
+  for i in range(0, 9):
+    boxes.append(drawBox("Hello there" + str(i), "happy"))
+  comic = makeComicStrip(boxes)
+  comic.save("results/comic.jpg")
+
 if __name__ == "__main__":
   boxes = []
   for i in range(0, 10):
