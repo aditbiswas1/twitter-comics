@@ -22,8 +22,6 @@ fontSize = 10
 
 comicHeight = 200
 
-characterToImage = dict()
-
 def makeComicStrip(comics):
     width = 0
     for comic in comics:
@@ -76,15 +74,13 @@ def downloadImage(url):
   return fileNameFromURL(url)
 
 def drawBox(text, mood, avatarImage):
-  if not (avatarImage in characterToImage):
-    imagePoolSize = len(bgImages[mood]["fg"]) - 1
-    index = randint(0, imagePoolSize)
-    characterToImage[avatarImage] = bgImages[mood]["fg"][index]
-  character = Image.open(characterToImage[avatarImage])
-  jsonData = open(characterToImage[avatarImage][:-3]+"json")
+  imagePoolSize = len(bgImages[mood]["fg"]) - 1
+  index = randint(0, imagePoolSize)
+  character = Image.open(bgImages[mood]["fg"][index])
+  jsonData = open(bgImages[mood]["fg"][index][:-3]+"json")
   imageData = json.load(jsonData)
-  x, y, w, h = imageData["x"], imageData["y"], imageData["w"], imageData["h"]
-  bx, by, bw, bh = imageData["bx"], imageData["by"], imageData["bw"], imageData["bh"]
+  x, y, w, h = int(imageData["x"]), int(imageData["y"]), int(imageData["w"]), int(imageData["h"])
+  bx, by, bw, bh = int(imageData["bx"]), int(imageData["by"]), int(imageData["bw"]), int(imageData["bh"])
   avatar = Image.open(avatarImage).resize((w, h))
   character.paste(avatar, (x, y))
   bgWidth, bgHeight = character.size
@@ -95,12 +91,10 @@ def drawBox(text, mood, avatarImage):
   return character
 
 def makeComic(ids):
-  characterToImage = dict()
   boxes = []
   tw = twitter.Twitter()
   tw.auth("wZQDRv06h28EMGrFO7KRUo2hc", "G3QF6xxBhaGATVdIpmxE1PkVuXIVAMAkasCGeUwOc9ir1rWZ7D")
   tweets = tw.getTweets(ids)
-  print len(tweets)
   for tweet in tweets:
     classified = twitterSentiment.tweetClassifier(tweet["text"])
     avatarImage = downloadImage(tweet["profilePictureURL"])
@@ -118,4 +112,4 @@ def drawBackground(image, mood):
   return bg
 
 if __name__ == "__main__":
-  makeComic(["565616594035159041", "565616718786330625", "569318156960792576", "569295535317741568"])
+  comic = makeComic(["569351099901046784", "560315450353938432"])
