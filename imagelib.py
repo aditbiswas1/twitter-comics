@@ -91,10 +91,13 @@ def drawBox(text, mood, avatarImage):
   return character
 
 def makeComic(ids):
+  def tweetID(tweet):
+    return tweet["id"]
   boxes = []
   tw = twitter.Twitter()
   tw.auth("wZQDRv06h28EMGrFO7KRUo2hc", "G3QF6xxBhaGATVdIpmxE1PkVuXIVAMAkasCGeUwOc9ir1rWZ7D")
   tweets = tw.getTweets(ids)
+  tweets.sort(key=tweetID)
   for tweet in tweets:
     classified = twitterSentiment.tweetClassifier(tweet["text"])
     avatarImage = downloadImage(tweet["profilePictureURL"])
@@ -112,4 +115,4 @@ def drawBackground(image, mood):
   return bg
 
 if __name__ == "__main__":
-  comic = makeComic(["569351099901046784", "560315450353938432"])
+  comic = makeComic(["569351099901046784", "569351749829464064", "569353056950681600", "569353331052642304", "569353718325358592"])
