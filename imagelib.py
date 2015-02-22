@@ -1,22 +1,24 @@
-import Image
-import ImageFont, ImageDraw
+from PIL import Image
+from PIL import ImageFont, ImageDraw
 from random import randint
 import json
 import twitter
+import twitterSentiment
 import urllib
 import urlparse, os
 from os.path import splitext, basename
 
-bgImages = {
-  "happy": [("8.jpg", "8.json"), ("happy1.jpg", "happy1.json"), ("happy2.jpeg", "happy2.json")],
-  "sad": [("sad1.jpeg", "sad1.json"), ("sad2.jpeg", "sad2.json")]
+bgImages = {"happy": {"bg": ["happy/bg/"+str(x)+".jpg" for x in xrange(1,11)],"fg": ["happy/fg/"+str(x)+".jpg" for x in xrange(1,7)]},
+  "sad": {"bg": ["sad/bg/"+str(x)+".jpg" for x in xrange(1,11)],"fg": ["sad/fg/"+str(x)+".jpg" for x in xrange(1,7)]},
+  "love": {"bg": ["love/bg/"+str(x)+".jpg" for x in xrange(1,11)],"fg": ["love/fg/"+str(x)+".jpg" for x in xrange(1,6)]},
+  "anger": {"bg": ["anger/bg/"+str(x)+".jpg" for x in xrange(1,11)],"fg": ["anger/fg/"+str(x)+".jpg" for x in xrange(1,7)]},
+  "neutral": {"bg": ["neutral/bg/"+str(x)+".jpg" for x in xrange(1,11)],"fg": ["neutral/fg/"+str(x)+".jpg" for x in xrange(1,8)]}
 }
 
 avatarImage = "avatar.png"
 bubbleImage = "bubble.jpg"
-bubbleJSON = "bubble.json"
 
-fontSize = 12
+fontSize = 10
 
 comicHeight = 200
 
@@ -36,8 +38,8 @@ def fileNameFromURL(url):
   path = urlparse.urlparse(url).path
   return basename(path)
 
-def getMaxLineLength(bubbleContentWidth):
-  return bubbleContentWidth / fontSize
+def getMaxLineLength(bubbleContentWidth, scaledFontSize):
+  return bubbleContentWidth / scaledFontSize
 
 def splitIntoLines(text, maxLength):
   words = text.split(" ")
@@ -58,51 +60,67 @@ def splitIntoLines(text, maxLength):
 def drawText(bg, text, bx, by, bw, bh):
   bx = bx + bw * 0.2
   bh = bh * 0.9
-  font = ImageFont.truetype("font.ttf", fontSize)
+  scaledFontSize = fontSize * bg.size[1] / 165
+  font = ImageFont.truetype("font.ttf", scaledFontSize)
   draw = ImageDraw.Draw(bg)
-  lines = splitIntoLines(text, getMaxLineLength(bw))
+  lines = splitIntoLines(text, getMaxLineLength(bw, scaledFontSize))
   y = by + (bh / 2 - (len(lines) * font.getsize(text)[1]) / 2)
   for line in lines:
     draw.text((bx, y), line, (0, 0, 0), font=font)
-    y += fontSize
+    y += scaledFontSize
 
 def downloadImage(url):
   urllib.urlretrieve(url, fileNameFromURL(url))
+  return fileNameFromURL(url)
 
-def drawBox(text, mood):
-  imagePoolSize = len(bgImages[mood]) - 2
+def drawBox(text, mood, avatarImage):
+  imagePoolSize = len(bgImages[mood]["fg"]) - 1
   index = randint(0, imagePoolSize)
-  bg = Image.open(bgImages[mood][index][0])
-  jsonData = open(bgImages[mood][index][1])
+  character = Image.open(bgImages[mood]["fg"][index])
+  jsonData = open(bgImages[mood]["fg"][index][:-3]+"json")
   imageData = json.load(jsonData)
   x, y, w, h = imageData["x"], imageData["y"], imageData["w"], imageData["h"]
   bx, by, bw, bh = imageData["bx"], imageData["by"], imageData["bw"], imageData["bh"]
   avatar = Image.open(avatarImage).resize((w, h))
-  bubble = Image.open(bubbleImage).resize((bw, bh))
-  bg.paste(avatar, (x, y))
-  bg.paste(bubble, (bx, by))
-  bgWidth, bgHeight = bg.size
-  draw = ImageDraw.Draw(bg)
+  character.paste(avatar, (x, y))
+  bgWidth, bgHeight = character.size
+  draw = ImageDraw.Draw(character)
   draw.line([(0, 1), (0, bgHeight - 1), (bgWidth - 1, bgHeight - 1), (bgWidth - 1, 1), (0, 1)], width=3, fill="black")
-  drawText(bg, text, bx, by, bw, bh)
-  bg = bg.resize((bg.size[0] * comicHeight / bg.size[1], comicHeight))
-  return bg
+  drawText(character, text, bx, by, bw, bh)
+  character = character.resize((character.size[0] * comicHeight / character.size[1], comicHeight))
+  return character
 
 def makeComic(ids):
   boxes = []
-  for i in range(0, 9):
-    boxes.append(drawBox("Hello there" + str(i), "happy"))
-  comic = makeComicStrip(boxes)
-  comic.save("results/comic.jpg")
-
-if __name__ == "__main__":
-  boxes = []
-  for i in range(0, 10):
-    boxes.append(drawBox("Hey. How are you doing?", "happy"))
-  comic = makeComicStrip(boxes)
-  comic.save("results/comic.jpg")
-  '''tw = twitter.Twitter()
+  tw = twitter.Twitter()
   tw.auth("", "")
   tweets = tw.getTweets(["565616594035159041", "565616718786330625"])
   for tweet in tweets:
-    downloadImage(tweet["profilePictureURL"])'''
+    classified = twitterSentiment.tweetClassifier(tweet["text"])
+    avatarImage = downloadImage(tweet["profilePictureURL"])
+    boxes.append(drawBackground(drawBox(twitterSentiment.cleanTweet(tweet["text"]), classified, avatarImage), classified))
+
+  comic = makeComicStrip(boxes)
+  comic.save("results/comic.jpg")
+
+def drawBackground(image, mood):
+  imagePoolSize = len(bgImages[mood]["bg"]) - 1
+  index = randint(0, imagePoolSize)
+  bg = Image.open(bgImages[mood]["bg"][index])
+  bg = bg.resize((bg.size[0] * comicHeight / bg.size[1], comicHeight))
+  bg.paste(image, (bg.size[0] / 2 - image.size[0] / 2, 0))
+  return bg
+
+if __name__ == "__main__":
+  boxes = []
+  tw = twitter.Twitter()
+  tw.auth("wZQDRv06h28EMGrFO7KRUo2hc", "G3QF6xxBhaGATVdIpmxE1PkVuXIVAMAkasCGeUwOc9ir1rWZ7D")
+  tweets = tw.getTweets(["565616594035159041", "565616718786330625"])
+  for tweet in tweets:
+    classified = twitterSentiment.tweetClassifier(tweet["text"])
+    avatarImage = downloadImage(tweet["profilePictureURL"])
+    print avatarImage
+    boxes.append(drawBackground(drawBox(twitterSentiment.cleanTweet(tweet["text"]), classified, avatarImage), classified))
+
+  comic = makeComicStrip(boxes)
+  comic.save("results/comic.jpg")

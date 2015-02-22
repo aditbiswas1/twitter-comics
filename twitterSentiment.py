@@ -1,10 +1,5 @@
-'''
-Helper functions for twitter tweets classification
-Author: Tushar Makkar <tusharmakkar08[at]gmail.com>
-Date: 21.02.2015
-'''
-
 import json, os, re
+import unicodedata
 
 def cleanTweet(tweet):
     '''
@@ -14,6 +9,7 @@ def cleanTweet(tweet):
     Returns : 
         A string with cleaned tweet
     '''
+    tweet = unicodedata.normalize('NFKD', tweet).encode('ascii', 'ignore')
     cleanedTweet = ""
     cleanedTweet = re.sub('((www\.[^\s]+)|(https?://[^\s]+))',' ',tweet) # Remove urls
     cleanedTweet = cleanedTweet.lower() # Convert to lowercase
